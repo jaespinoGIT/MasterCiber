@@ -3,14 +3,40 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 backend = default_backend()
-key = bytes(str('12345678901234567890123456789012'), 'ascii')  # Clave
-iv = os.urandom(16)  # Vector inizialicion
-cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+clave = bytes(str('12345678901234567890123456789012'), 'ascii')
+
+vectorInicializacion = os.urandom(16)  # Vector inicializacion
+
+textoPlano = bytes("a secret message", 'ascii')
+print('Texto claro: ', textoPlano)
+
+#  AES y Output Feedback (OFB)
+cipher = Cipher(algorithms.AES(clave), modes.OFB(vectorInicializacion), backend=backend)
 encryptor = cipher.encryptor()
-cryptogram = encryptor.update(b"a secret message") + encryptor.finalize()
-print('Cifrado modo CBC:', cryptogram)
+
+criptogramaOFB = encryptor.update(textoPlano) + encryptor.finalize()
+print('Cifrado modo OFB:', criptogramaOFB)
+
+#  AES y Cipher Feedback (CFB)
+cipher = Cipher(algorithms.AES(clave), modes.CFB(vectorInicializacion), backend=backend)
+encryptor = cipher.encryptor()
+
+criptogramaCFB = encryptor.update(textoPlano) + encryptor.finalize()
+print('Cifrado modo CFB:', criptogramaCFB)
+
+#  AES y Electronic Code Book (ECB)
+cipher = Cipher(algorithms.AES(clave), modes.ECB(), backend=backend)
+encryptor = cipher.encryptor()
+
+criptogramaECB = encryptor.update(textoPlano) + encryptor.finalize()
+print('Cifrado modo ECB:', criptogramaECB)
+
+assert criptogramaOFB == criptogramaCFB
+assert criptogramaOFB != criptogramaECB
+assert criptogramaCFB != criptogramaECB
 
 decryptor = cipher.decryptor()
-cleartText = decryptor.update(cryptogram) + decryptor.finalize()
-print('Texto claro: ', cleartText)
+textoDesencriptado = decryptor.update(criptogramaECB) + decryptor.finalize()
+print('Texto desencriptado: ', textoDesencriptado)
 
+assert textoPlano == textoDesencriptado
