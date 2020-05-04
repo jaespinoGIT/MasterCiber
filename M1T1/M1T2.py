@@ -1,22 +1,38 @@
-import os
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import hashes
 
-backend = default_backend()
-clave = bytes(str('12345678901234567890123456789012'), 'ascii')
+hashFicheroOriginal = "944a1e869969dd8a4b64ca5e6ebc209a"
+ficheroOriginal = "WinMD5.exe"
+ficheroDuplicado = "WinMD5_2.exe"
 
-vectorInicializacion = os.urandom(16)  # Vector inicializacion
-#  AES y Cipher Block Chaining (CBC)
-cipher = Cipher(algorithms.AES(clave), modes.CBC(vectorInicializacion), backend=backend)
-encryptor = cipher.encryptor()
+print('Hash MD5 del fichero original:     ', hashFicheroOriginal)
 
-textoPlano = bytes("a secret message", 'ascii')
-print('Texto claro: ', textoPlano)
-criptograma = encryptor.update(textoPlano) + encryptor.finalize()
-print('Cifrado modo CBC:', criptograma)
+with open(ficheroOriginal, 'rb') as f:
+    data = f.read()
 
-decryptor = cipher.decryptor()
-textoDesencriptado = decryptor.update(criptograma) + decryptor.finalize()
-print('Texto desencriptado: ', textoDesencriptado)
+f.close()
 
-assert textoPlano == textoDesencriptado
+digest = hashes.Hash(hashes.MD5(), backend=default_backend())
+
+digest.update(data)
+
+hashObtenidoFicheroOriginal=digest.finalize()
+
+print('Hash MD5 del fichero ' + ficheroOriginal + ':   ', hashObtenidoFicheroOriginal.hex())
+
+with open(ficheroDuplicado, 'rb') as f:
+    data = f.read()
+
+f.close()
+
+digest = hashes.Hash(hashes.MD5(), backend=default_backend())
+
+digest.update(data)
+
+hashObtenidoFicheroDuplicado=digest.finalize()
+
+print('Hash MD5 del fichero ' + ficheroDuplicado + ': ', hashObtenidoFicheroDuplicado.hex())
+
+assert hashObtenidoFicheroOriginal.hex() == hashFicheroOriginal
+assert hashObtenidoFicheroDuplicado.hex() != hashObtenidoFicheroOriginal.hex()
+assert hashObtenidoFicheroDuplicado.hex() != hashFicheroOriginal
